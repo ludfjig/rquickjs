@@ -20,6 +20,9 @@ pub use params::{FromParam, FromParams, ParamRequirement, Params, ParamsAccessor
 pub use types::Async;
 pub use types::{Exhaustive, Flat, Func, FuncArg, MutFn, Null, OnceFn, Opt, Rest, This};
 
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+
 /// A trait for converting a Rust function to a JavaScript function.
 pub trait IntoJsFunc<'js, P> {
     /// Returns the requirements this function has for the set of arguments used to call this

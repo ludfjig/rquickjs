@@ -2,7 +2,8 @@ use crate::{
     atom::PredefinedAtom, qjs, ArrayBuffer, Ctx, Error, FromJs, IntoJs, JsLifetime, Object, Result,
     Value,
 };
-use std::{
+use alloc::vec::Vec;
+use core::{
     fmt,
     marker::PhantomData,
     mem::{self, MaybeUninit},

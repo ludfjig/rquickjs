@@ -1,10 +1,10 @@
-use std::{
+use crate::{Ctx, Function, IntoJs, Result, Value};
+use alloc::vec::Vec;
+use core::{
     cell::{Cell, RefCell},
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
-
-use crate::{Ctx, Function, IntoJs, Result, Value};
 
 use super::IntoJsFunc;
 

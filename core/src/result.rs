@@ -1,13 +1,17 @@
-use std::{
+use core::{
     error::Error as StdError,
-    ffi::{CString, FromBytesWithNulError, NulError},
     fmt::{self, Display, Formatter, Result as FmtResult},
-    io::Error as IoError,
     panic,
     panic::UnwindSafe,
     str::{FromStr, Utf8Error},
-    string::FromUtf8Error,
 };
+
+use alloc::ffi::CString;
+use alloc::ffi::NulError;
+use alloc::format;
+use alloc::string::FromUtf8Error;
+use alloc::string::ToString;
+use core::ffi::FromBytesWithNulError;
 
 #[cfg(feature = "futures")]
 use crate::context::AsyncContext;
@@ -50,7 +54,7 @@ impl fmt::Display for BorrowError {
     }
 }
 
-impl std::error::Error for BorrowError {}
+impl core::error::Error for BorrowError {}
 
 /// Error type of the library.
 #[derive(Debug)]
@@ -72,7 +76,7 @@ pub enum Error {
     /// String from rquickjs was not UTF-8
     Utf8(Utf8Error),
     /// An io error
-    Io(IoError),
+    // Io(IoError),
     /// An error happened while trying to borrow a Rust class object.
     ClassBorrow(BorrowError),
     /// An error happened while trying to borrow a Rust function.
@@ -444,10 +448,10 @@ impl Display for Error {
                     }
                 }
             }
-            Error::Io(error) => {
-                "IO Error: ".fmt(f)?;
-                error.fmt(f)?;
-            }
+            // Error::Io(error) => {
+            //     "IO Error: ".fmt(f)?;
+            //     error.fmt(f)?;
+            // }
             Error::ClassBorrow(x) => {
                 "Error borrowing class: ".fmt(f)?;
                 x.fmt(f)?;
@@ -484,7 +488,7 @@ from_impls! {
     NulError => InvalidString,
     FromBytesWithNulError => InvalidCStr,
     Utf8Error => Utf8,
-    IoError => Io,
+    // IoError => Io,
 }
 
 impl From<FromUtf8Error> for Error {
@@ -669,15 +673,16 @@ impl<'js> Ctx<'js> {
     where
         F: FnOnce() -> qjs::JSValue + UnwindSafe,
     {
-        unsafe {
-            match panic::catch_unwind(f) {
-                Ok(x) => x,
-                Err(e) => {
-                    self.get_opaque().set_panic(e);
-                    qjs::JS_Throw(self.as_ptr(), qjs::JS_MKVAL(qjs::JS_TAG_EXCEPTION, 0))
-                }
-            }
-        }
+        // unsafe {
+        // match panic::catch_unwind(f) {
+        //     Ok(x) => x,
+        //     Err(e) => {
+        //         self.get_opaque().set_panic(e);
+        //         qjs::JS_Throw(self.as_ptr(), qjs::JS_MKVAL(qjs::JS_TAG_EXCEPTION, 0))
+        //     }
+        // }
+        // }
+        f()
     }
 
     /// Handle possible exceptions in [`JSValue`]'s and turn them into errors
@@ -689,9 +694,9 @@ impl<'js> Ctx<'js> {
         if qjs::JS_VALUE_GET_NORM_TAG(js_val) != qjs::JS_TAG_EXCEPTION {
             Ok(js_val)
         } else {
-            if let Some(x) = self.get_opaque().take_panic() {
-                panic::resume_unwind(x)
-            }
+            // if let Some(x) = self.get_opaque().take_panic() {
+            //     panic::resume_unwind(x)
+            // }
             Err(Error::Exception)
         }
     }
@@ -700,11 +705,11 @@ impl<'js> Ctx<'js> {
     /// otherwise continues panicking.
     pub(crate) fn raise_exception(&self) -> Error {
         // Safety
-        unsafe {
-            if let Some(x) = self.get_opaque().take_panic() {
-                panic::resume_unwind(x)
-            }
-            Error::Exception
-        }
+        // unsafe {
+        // if let Some(x) = self.get_opaque().take_panic() {
+        //     panic::resume_unwind(x)
+        // }
+        // }
+        Error::Exception
     }
 }

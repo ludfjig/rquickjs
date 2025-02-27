@@ -1,15 +1,13 @@
 use crate::{
     convert::{IteratorJs, List},
-    value::Constructor,
     Array, CString, Ctx, Error, IntoAtom, IntoJs, Object, Result, StdResult, StdString, String,
     Value,
 };
-use std::{
-    cell::{Cell, RefCell},
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
-    sync::{Mutex, RwLock},
-    time::SystemTime,
-};
+use alloc::boxed::Box;
+use alloc::collections::{BTreeMap, BTreeSet, LinkedList, VecDeque};
+use alloc::string::ToString;
+use alloc::vec::Vec;
+use core::cell::{Cell, RefCell};
 
 #[cfg(feature = "either")]
 use either::{Either, Left, Right};
@@ -203,45 +201,45 @@ where
     }
 }
 
-impl<'js, T> IntoJs<'js> for Mutex<T>
-where
-    T: IntoJs<'js>,
-{
-    fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
-        // TODO: determine we should panic her or just unpack the value.
-        self.into_inner().expect("mutex was poisoned").into_js(ctx)
-    }
-}
+// impl<'js, T> IntoJs<'js> for Mutex<T>
+// where
+//     T: IntoJs<'js>,
+// {
+//     fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
+//         // TODO: determine we should panic her or just unpack the value.
+//         self.into_inner().expect("mutex was poisoned").into_js(ctx)
+//     }
+// }
 
-impl<'js, T> IntoJs<'js> for &Mutex<T>
-where
-    for<'r> &'r T: IntoJs<'js>,
-{
-    fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
-        // TODO: determine we should panic her or just unpack the value.
-        self.lock().expect("mutex was poisoned").into_js(ctx)
-    }
-}
+// impl<'js, T> IntoJs<'js> for &Mutex<T>
+// where
+//     for<'r> &'r T: IntoJs<'js>,
+// {
+//     fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
+//         // TODO: determine we should panic her or just unpack the value.
+//         self.lock().expect("mutex was poisoned").into_js(ctx)
+//     }
+// }
 
-impl<'js, T> IntoJs<'js> for RwLock<T>
-where
-    T: IntoJs<'js>,
-{
-    fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
-        // TODO: determine we should panic her or just unpack the value.
-        self.into_inner().expect("lock was poisoned").into_js(ctx)
-    }
-}
+// impl<'js, T> IntoJs<'js> for RwLock<T>
+// where
+//     T: IntoJs<'js>,
+// {
+//     fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
+//         // TODO: determine we should panic her or just unpack the value.
+//         self.into_inner().expect("lock was poisoned").into_js(ctx)
+//     }
+// }
 
-impl<'js, T> IntoJs<'js> for &RwLock<T>
-where
-    for<'r> &'r T: IntoJs<'js>,
-{
-    fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
-        // TODO: determine we should panic her or just unpack the value.
-        self.read().expect("lock was poisoned").into_js(ctx)
-    }
-}
+// impl<'js, T> IntoJs<'js> for &RwLock<T>
+// where
+//     for<'r> &'r T: IntoJs<'js>,
+// {
+//     fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
+//         // TODO: determine we should panic her or just unpack the value.
+//         self.read().expect("lock was poisoned").into_js(ctx)
+//     }
+// }
 
 macro_rules! into_js_impls {
     // for cells
@@ -433,7 +431,7 @@ into_js_impls! {
     /// Convert from Rust linked list to JS array
     LinkedList,
     /// Convert from Rust hash set to JS array
-    HashSet {S},
+    // HashSet {S},
     /// Convert from Rust btree set to JS array
     BTreeSet,
     /// Convert from Rust index set to JS array
@@ -445,7 +443,7 @@ into_js_impls! {
 into_js_impls! {
     map:
     /// Convert from Rust hash map to JS object
-    HashMap {S},
+    // HashMap {S},
     /// Convert from Rust btree map to JS object
     BTreeMap,
     /// Convert from Rust index map to JS object
@@ -466,48 +464,48 @@ into_js_impls! {
     i32 f64 => i64 u32 u64 usize isize,
 }
 
-fn millis_to_date<'js>(ctx: &Ctx<'js>, millis: i64) -> Result<Value<'js>> {
-    let date_ctor: Constructor = ctx.globals().get("Date")?;
+// fn millis_to_date<'js>(ctx: &Ctx<'js>, millis: i64) -> Result<Value<'js>> {
+//     let date_ctor: Constructor = ctx.globals().get("Date")?;
 
-    date_ctor.construct((millis,))
-}
+//     date_ctor.construct((millis,))
+// }
 
-impl<'js> IntoJs<'js> for SystemTime {
-    fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
-        let millis = match self.duration_since(SystemTime::UNIX_EPOCH) {
-            // since unix epoch
-            Ok(duration) => {
-                let millis = duration.as_millis();
+// impl<'js> IntoJs<'js> for SystemTime {
+//     fn into_js(self, ctx: &Ctx<'js>) -> Result<Value<'js>> {
+//         let millis = match self.duration_since(SystemTime::UNIX_EPOCH) {
+//             // since unix epoch
+//             Ok(duration) => {
+//                 let millis = duration.as_millis();
 
-                if millis > i64::MAX as _ {
-                    return Err(Error::new_into_js_message(
-                        "SystemTime",
-                        "Date",
-                        "Timestamp too big",
-                    ));
-                }
+//                 if millis > i64::MAX as _ {
+//                     return Err(Error::new_into_js_message(
+//                         "SystemTime",
+//                         "Date",
+//                         "Timestamp too big",
+//                     ));
+//                 }
 
-                millis as i64
-            }
-            // before unix epoch
-            Err(error) => {
-                let millis = error.duration().as_millis();
+//                 millis as i64
+//             }
+//             // before unix epoch
+//             Err(error) => {
+//                 let millis = error.duration().as_millis();
 
-                if millis > -(i64::MIN as i128) as _ {
-                    return Err(Error::new_into_js_message(
-                        "SystemTime",
-                        "Date",
-                        "Timestamp too small",
-                    ));
-                }
+//                 if millis > -(i64::MIN as i128) as _ {
+//                     return Err(Error::new_into_js_message(
+//                         "SystemTime",
+//                         "Date",
+//                         "Timestamp too small",
+//                     ));
+//                 }
 
-                (-(millis as i128)) as i64
-            }
-        };
+//                 (-(millis as i128)) as i64
+//             }
+//         };
 
-        millis_to_date(ctx, millis)
-    }
-}
+//         millis_to_date(ctx, millis)
+//     }
+// }
 
 #[cfg(feature = "chrono")]
 impl<'js, Tz: chrono::TimeZone> IntoJs<'js> for chrono::DateTime<Tz> {

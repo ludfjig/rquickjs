@@ -22,7 +22,11 @@ optional = true
 version = "0.5"
 optional = true
 
+[dependencies]
+hyperlight-guest = { version = "0.2.0" }
+
 [features]
+default = ["bindgen"]
 bindgen = ["bindgen-rs"]
 
 # Debug logging

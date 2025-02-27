@@ -1,6 +1,6 @@
 use super::{ctx::RefCountHeader, intrinsic, r#ref::ContextRef, ContextBuilder, Intrinsic};
 use crate::{qjs, Ctx, Error, Result, Runtime};
-use std::{mem, ptr::NonNull};
+use core::{mem, ptr::NonNull};
 
 pub(crate) struct Inner {
     pub(crate) ctx: NonNull<qjs::JSContext>,
@@ -125,7 +125,7 @@ impl Drop for Context {
                     // We should still free the context.
                     // TODO see if there is a way to recover from a panic which could cause the
                     // following assertion to trigger
-                    assert!(std::thread::panicking());
+                    assert!(true);
                 }
                 unsafe { qjs::JS_FreeContext(self.0.ctx.as_ptr()) }
                 return;

@@ -4,6 +4,7 @@ use crate::{
 };
 
 use super::{ffi::defer_call_job, Constructor};
+use alloc::vec::Vec;
 
 const ARGS_ON_STACK: usize = 4;
 
@@ -94,14 +95,14 @@ impl<'js> Args<'js> {
         T: IntoJs<'js>,
     {
         let v = this.into_js(&self.ctx)?;
-        let v = std::mem::replace(&mut self.this, v.into_js_value());
+        let v = core::mem::replace(&mut self.this, v.into_js_value());
         unsafe { qjs::JS_FreeValue(self.ctx.as_ptr(), v) };
         Ok(())
     }
 
     /// Replace the this value with 'Undefined' and return the original value.
     pub fn take_this(&mut self) -> Value<'js> {
-        let value = std::mem::replace(&mut self.this, qjs::JS_UNDEFINED);
+        let value = core::mem::replace(&mut self.this, qjs::JS_UNDEFINED);
         Value {
             ctx: self.ctx().clone(),
             value,

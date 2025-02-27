@@ -147,13 +147,38 @@ fn main() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
 
+    let libc_dir = PathBuf::from(
+        env::var("DEP_C_INCLUDE").expect("DEP_C_INCLUDE should be set by hyperlight-"),
+    );
+
+    // let lib_path = PathBuf::from(
+    //     env::var("DEP_C_INCLUDE").expect("DEP_C_INCLUDE should be set by hyperlight-guest"),
+    // )
+    // .join("..")
+    // .canonicalize()
+    // .unwrap();
+
+    // println!("cargo:warning=libc_dir: {:?}", lib_path);
+
+    // println!("cargo:rustc-link-lib=hyperlight_guest"); // Link libA.a
+    // println!("cargo:rustc-link-search={}", lib_path.display());
+    let cargo_manifest_dir =
+        PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("include");
+
     let mut builder = cc::Build::new();
     builder
         .extra_warnings(false)
         .flag_if_supported("-Wno-implicit-const-int-float-conversion")
-        //.flag("-Wno-array-bounds")
-        //.flag("-Wno-format-truncation")
-        ;
+        .flag("-nostdinc")
+        .flag("-fno-stack-protector")
+        .include(&libc_dir)
+        .include(libc_dir.join("sys"))
+        .include(libc_dir.join("bits"))
+        .include(&cargo_manifest_dir)
+        .define("HYPERLIGHT", None)
+        .define("putchar", "_putchar");
+    //.flag("-Wno-array-bounds")
+    //.flag("-Wno-format-truncation")
 
     match env::var("CARGO_CFG_SANITIZE").as_deref() {
         Ok("address") => {
@@ -188,12 +213,13 @@ fn main() {
         }
     }
 
-    if target_os == "wasi" {
+    if target_os == "wasi" || target_os == "none" {
         // pretend we're emscripten - there are already ifdefs that match
         // also, wasi doesn't ahve FE_DOWNWARD or FE_UPWARD
         defines.push(("EMSCRIPTEN".into(), Some("1")));
-        defines.push(("FE_DOWNWARD".into(), Some("0")));
-        defines.push(("FE_UPWARD".into(), Some("0")));
+        // defines.push(("FE_DOWNWARD".into(), Some("0")));
+        // defines.push(("FE_UPWARD".into(), Some("0")));
+        defines.push(("HYPERLIGHT".into(), Some("1")));
     }
 
     for file in source_files.iter().chain(header_files.iter()) {
@@ -313,6 +339,7 @@ where
     }
 
     let mut builder = bindgen_rs::Builder::default()
+        .use_core()
         .detect_include_paths(true)
         .clang_arg("-xc")
         .clang_arg("-v")

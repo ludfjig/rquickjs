@@ -6,8 +6,8 @@ use crate::{
     value::Constructor,
     Ctx, Error, FromJs, IntoJs, JsLifetime, Object, Result, Value,
 };
-use std::{hash::Hash, marker::PhantomData, mem, ops::Deref, ptr::NonNull};
-
+use alloc::boxed::Box;
+use core::{hash::Hash, marker::PhantomData, mem, ops::Deref, ptr::NonNull};
 mod cell;
 mod trace;
 
@@ -69,7 +69,7 @@ impl<'js, C: JsClass<'js>> PartialEq for Class<'js, C> {
 impl<'js, C: JsClass<'js>> Eq for Class<'js, C> {}
 
 impl<'js, C: JsClass<'js>> Hash for Class<'js, C> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.0.hash(state)
     }
 }
@@ -301,7 +301,7 @@ impl<'js> Object<'js> {
         // duplicated, which is possible when compilation with multiple code-gen units.
         //
         // Doing check avoids a lookup and an dynamic function call in some cases.
-        if std::ptr::eq(v_table, VTable::get::<C>()) {
+        if core::ptr::eq(v_table, VTable::get::<C>()) {
             return true;
         }
 
@@ -309,7 +309,7 @@ impl<'js> Object<'js> {
     }
 
     /// Turn the object into the class if it is an instance of that class.
-    pub fn into_class<C: JsClass<'js>>(&self) -> std::result::Result<Class<'js, C>, &Self> {
+    pub fn into_class<C: JsClass<'js>>(&self) -> core::result::Result<Class<'js, C>, &Self> {
         if self.instance_of::<C>() {
             Ok(Class(self.clone(), PhantomData))
         } else {
@@ -343,7 +343,7 @@ impl<'js, C: JsClass<'js>> IntoJs<'js> for Class<'js, C> {
 
 #[cfg(test)]
 mod test {
-    use std::sync::{
+    use core::sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
     };
@@ -589,19 +589,19 @@ mod test {
 
     #[test]
     fn generic_types() {
-        pub struct DebugPrinter<D: std::fmt::Debug> {
+        pub struct DebugPrinter<D: core::fmt::Debug> {
             d: D,
         }
 
-        impl<'js, D: std::fmt::Debug> Trace<'js> for DebugPrinter<D> {
+        impl<'js, D: core::fmt::Debug> Trace<'js> for DebugPrinter<D> {
             fn trace<'a>(&self, _tracer: Tracer<'a, 'js>) {}
         }
 
-        unsafe impl<'js, D: std::fmt::Debug + 'static> JsLifetime<'js> for DebugPrinter<D> {
+        unsafe impl<'js, D: core::fmt::Debug + 'static> JsLifetime<'js> for DebugPrinter<D> {
             type Changed<'to> = DebugPrinter<D>;
         }
 
-        impl<'js, D: std::fmt::Debug + 'static> JsClass<'js> for DebugPrinter<D> {
+        impl<'js, D: core::fmt::Debug + 'static> JsClass<'js> for DebugPrinter<D> {
             const NAME: &'static str = "DebugPrinter";
 
             type Mutable = Readable;

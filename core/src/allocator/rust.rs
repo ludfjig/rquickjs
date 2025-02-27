@@ -1,9 +1,7 @@
-use std::{
-    alloc::{self, Layout},
-    mem, ptr,
-};
+use core::{self, alloc::Layout, mem, ptr};
 
 use super::Allocator;
+use alloc::alloc;
 
 /// The largest value QuickJS will allocate is a u64;
 /// So all allocated memory must have the same alignment is this largest size.

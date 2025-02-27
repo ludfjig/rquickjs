@@ -7,6 +7,8 @@ use crate::{
 
 use super::Constructor;
 
+use alloc::boxed::Box;
+
 pub unsafe extern "C" fn defer_call_job(
     ctx: *mut qjs::JSContext,
     argc: qjs::c_int,

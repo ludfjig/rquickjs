@@ -1,7 +1,7 @@
 //! Types for loading and handling JS modules.
 
-use std::{
-    ffi::{CStr, CString},
+use core::{
+    ffi::CStr,
     marker::PhantomData,
     mem::MaybeUninit,
     ptr::{self, NonNull},
@@ -12,6 +12,8 @@ use crate::{
     atom::PredefinedAtom, qjs, Atom, Ctx, Error, FromAtom, FromJs, IntoAtom, IntoJs, Object,
     Promise, Result, Value,
 };
+use alloc::ffi::CString;
+use alloc::vec::Vec;
 
 /// Helper macro to provide module init function.
 /// Use for exporting module definitions to be loaded as part of a dynamic library.

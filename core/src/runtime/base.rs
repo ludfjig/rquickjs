@@ -5,8 +5,9 @@ use crate::allocator::Allocator;
 #[cfg(feature = "loader")]
 use crate::loader::{Loader, Resolver};
 use crate::{result::JobException, Context, Mut, Ref, Result, Weak};
-use std::{ffi::CString, ptr::NonNull, result::Result as StdResult};
-
+use alloc::ffi::CString;
+use alloc::vec::Vec;
+use core::{ptr::NonNull, result::Result as StdResult};
 /// A weak handle to the runtime.
 ///
 /// Holding onto this struct does not prevent the runtime from being dropped.

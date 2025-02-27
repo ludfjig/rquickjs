@@ -3,14 +3,16 @@ use crate::{
     qjs, Ctx, Error, JsLifetime, Object, Value,
 };
 
+use alloc::collections::btree_map::Entry;
+use alloc::{boxed::Box, collections::btree_map::BTreeMap};
+
 use super::{
     userdata::{UserDataGuard, UserDataMap},
     InterruptHandler, RejectionTracker, UserDataError,
 };
-use std::{
+use core::{
     any::{Any, TypeId},
     cell::{Cell, UnsafeCell},
-    collections::{hash_map::Entry, HashMap},
     marker::PhantomData,
     ptr,
 };
@@ -40,7 +42,7 @@ pub(crate) struct Opaque<'js> {
     /// The class id for rust classes which can be called.
     callable_class_id: qjs::JSClassID,
 
-    prototypes: UnsafeCell<HashMap<TypeId, Option<Object<'js>>>>,
+    prototypes: UnsafeCell<BTreeMap<TypeId, Option<Object<'js>>>>,
 
     userdata: UserDataMap,
 
@@ -62,7 +64,7 @@ impl<'js> Opaque<'js> {
             class_id: qjs::JS_INVALID_CLASS_ID,
             callable_class_id: qjs::JS_INVALID_CLASS_ID,
 
-            prototypes: UnsafeCell::new(HashMap::new()),
+            prototypes: UnsafeCell::new(BTreeMap::new()),
 
             userdata: UserDataMap::default(),
 
@@ -193,13 +195,13 @@ impl<'js> Opaque<'js> {
         unsafe { (*self.interrupt_handler.get()).as_mut().unwrap()() }
     }
 
-    pub fn set_panic(&self, panic: Box<dyn Any + Send + 'static>) {
-        self.panic.set(Some(panic))
-    }
+    // pub fn set_panic(&self, panic: Box<dyn Any + Send + 'static>) {
+    //     self.panic.set(Some(panic))
+    // }
 
-    pub fn take_panic(&self) -> Option<Box<dyn Any + Send + 'static>> {
-        self.panic.take()
-    }
+    // pub fn take_panic(&self) -> Option<Box<dyn Any + Send + 'static>> {
+    //     self.panic.take()
+    // }
 
     pub fn get_class_id(&self) -> qjs::JSClassID {
         self.class_id

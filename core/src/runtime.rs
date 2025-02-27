@@ -5,6 +5,8 @@ pub(crate) mod opaque;
 pub(crate) mod raw;
 mod userdata;
 
+use alloc::boxed::Box;
+
 #[cfg(feature = "futures")]
 mod r#async;
 #[cfg(feature = "futures")]
